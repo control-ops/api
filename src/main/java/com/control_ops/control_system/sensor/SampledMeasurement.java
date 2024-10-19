@@ -8,8 +8,8 @@ public class SampledMeasurement implements MeasurementBehaviour {
     private final SecureRandom random = new SecureRandom();
 
     @Override
-    public Measurement takeMeasurement(final String sensorId, final MeasurementUnit measurementUnit, final ZoneId timeZone) {
+    public Signal takeMeasurement(final String sensorId, final SignalUnit signalUnit, final ZoneId timeZone) {
         final double quantity = random.nextDouble();
-        return new Measurement(sensorId, quantity, measurementUnit, ZonedDateTime.now(timeZone));
+        return new Signal(sensorId, quantity, signalUnit, ZonedDateTime.now(timeZone));
     }
 }

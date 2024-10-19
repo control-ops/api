@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MeasurementList implements SensorListener {
-    private final List<Measurement> measurements = new ArrayList<>();
+    private final List<Signal> signals = new ArrayList<>();
 
     @Override
-    public void onMeasurement(final Measurement measurement) {
-        measurements.add(measurement);
+    public void onMeasurement(final Signal signal) {
+        signals.add(signal);
     }
 
-    List<Measurement> getMeasurements() {
-        return measurements;
+    List<Signal> getMeasurements() {
+        return signals;
     }
 }

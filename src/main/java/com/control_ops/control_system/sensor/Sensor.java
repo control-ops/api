@@ -20,7 +20,7 @@ public class Sensor {
     private final String sensorId;
     private final long samplingPeriod;
     private final TimeUnit samplingPeriodUnit;
-    private final MeasurementUnit measurementUnit;
+    private final SignalUnit signalUnit;
     private final ScheduledExecutorService scheduler;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
     private static final Set<String> sensorIds = new HashSet<>();
@@ -36,13 +36,14 @@ public class Sensor {
      * @param sensorId A unique string identifying the sensor
      * @param samplingPeriod How often the sensor should record a new measurement
      * @param samplingPeriodUnit The time units in which the sampling period is denominated (e.g. milliseconds)
-     * @param measurementUnit The measurement unit of data gathered by the sensor
+     * @param signalUnit The measurement unit of data gathered by the sensor
+     * @param measurementBehaviour Describes how measurements should be taken
      */
     public Sensor(
             final String sensorId,
             final long samplingPeriod,
             final TimeUnit samplingPeriodUnit,
-            final MeasurementUnit measurementUnit,
+            final SignalUnit signalUnit,
             final MeasurementBehaviour measurementBehaviour) {
         if (sensorIds.contains(sensorId)) {
             throw new SensorAlreadyExistsException(sensorId);
@@ -51,7 +52,7 @@ public class Sensor {
         this.sensorId = sensorId;
         this.samplingPeriod = samplingPeriod;
         this.samplingPeriodUnit = samplingPeriodUnit;
-        this.measurementUnit = measurementUnit;
+        this.signalUnit = signalUnit;
         this.measurementBehaviour = measurementBehaviour;
         this.scheduler = Executors.newScheduledThreadPool(1);
         logger.info("A new sensor was created: Sensor ID: {}\tTotal sensors: {}", sensorId, sensorIds.size());
@@ -99,12 +100,12 @@ public class Sensor {
      * Takes a new measurement using the sensor's measurement behaviour.
      */
     private synchronized void takeMeasurement() {
-        Measurement newMeasurement = measurementBehaviour.takeMeasurement(
+        Signal newSignal = measurementBehaviour.takeMeasurement(
                 sensorId,
-                measurementUnit,
+                signalUnit,
                 ZoneId.of("UTC"));
         for (final SensorListener listener : this.sensorListeners) {
-            listener.onMeasurement(newMeasurement);
+            listener.onMeasurement(newSignal);
         }
     }
 }
