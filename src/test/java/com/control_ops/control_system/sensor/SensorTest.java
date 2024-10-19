@@ -29,7 +29,7 @@ class SensorTest {
 
     private Sensor makeDefaultSensor() {
         numSensorsInstantiated++;
-        return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
     }
 
     private String generateSensorId() {
@@ -49,9 +49,15 @@ class SensorTest {
      */
     @Test
     void testSensorInstantiation() {
-        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
+        final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-                () -> new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS)
+                () -> new Sensor(
+                        "fakeId",
+                        samplingPeriod,
+                        samplingTimeUnit,
+                        MeasurementUnit.CELSIUS,
+                        measurementBehaviour)
         );
     }
 
@@ -96,6 +102,9 @@ class SensorTest {
         sensor.startMeasuring();
         await().atMost(100*samplingPeriod, samplingTimeUnit).until(() -> !measurements.isEmpty());
         assertThat(measurements).hasSizeGreaterThan(1);
+
+        // The measurement list has already been added as a listener, so adding it again should throw
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> sensor.addListener(measurementList));
     }
 
     /**
@@ -109,6 +118,9 @@ class SensorTest {
         sensor.startMeasuring();
         await().during(10*samplingPeriod, samplingTimeUnit);
         assertThat(measurements).isEmpty();
+
+        // The measurement list has already removed, so removing it again should throw
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> sensor.removeListener(measurementList));
     }
 
     /**
@@ -193,7 +205,12 @@ class SensorTest {
             final long minimumMeasurements,
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
-        final Sensor sensor = new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = new Sensor(
+                generateSensorId(),
+                samplingPeriod,
+                samplingTimeUnit,
+                MeasurementUnit.CELSIUS,
+                new SampledMeasurement());
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
