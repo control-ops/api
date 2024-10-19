@@ -24,6 +24,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.amqp:spring-rabbit-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("com.h2database:h2") // A database is required by the applicationcontext for tests to pass; switch out later for PostgresSQL
 }
 
 tasks.withType<Test> {
