@@ -1,4 +1,4 @@
-package com.control_ops.control_system.sensor;
+package com.control_ops.control_system.instrument;
 
 import java.time.ZonedDateTime;
 

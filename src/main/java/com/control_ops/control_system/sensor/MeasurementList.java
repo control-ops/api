@@ -1,5 +1,7 @@
 package com.control_ops.control_system.sensor;
 
+import com.control_ops.control_system.instrument.Signal;
+
 import java.util.ArrayList;
 import java.util.List;
 

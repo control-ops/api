@@ -1,5 +1,7 @@
 package com.control_ops.control_system.sensor;
 
+import com.control_ops.control_system.instrument.Signal;
+import com.control_ops.control_system.instrument.SignalUnit;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

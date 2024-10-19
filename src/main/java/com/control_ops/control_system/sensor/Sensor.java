@@ -1,5 +1,7 @@
 package com.control_ops.control_system.sensor;
 
+import com.control_ops.control_system.instrument.Signal;
+import com.control_ops.control_system.instrument.SignalUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
