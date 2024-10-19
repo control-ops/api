@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,11 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class SensorTest {
 
-    final MeasurementList measurementList = new MeasurementList();
-    final List<Measurement> measurements = measurementList.getMeasurements();
+    private final MeasurementList measurementList = new MeasurementList();
+    private final List<Measurement> measurements = measurementList.getMeasurements();
 
-    long samplingPeriod = 20L;
-    final TimeUnit samplingTimeUnit = TimeUnit.MILLISECONDS;
+    private long samplingPeriod = 30L;
+    private final TimeUnit samplingTimeUnit = TimeUnit.MILLISECONDS;
+    private static int numSensorsInstantiated = 0;
+
+    private Sensor makeDefaultSensor() {
+        numSensorsInstantiated++;
+        return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+    }
+
+    private String generateSensorId() {
+        numSensorsInstantiated++;
+        return "thermocouple" + numSensorsInstantiated;
+    }
 
     /**
      * Causes the calling thread to wait until at least one measurement is received.
@@ -33,11 +45,22 @@ class SensorTest {
     }
 
     /**
+     * Tests that multiple sensors with the same sensor ID cannot be instantiated.
+     */
+    @Test
+    void testSensorInstantiation() {
+        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+                () -> new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS)
+        );
+    }
+
+    /**
      * Tests that the sensor's startMeasuring() method commences the generation and transmission of measurements.
      */
     @Test
     void testStartMeasuring() {
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         assertThrows(
                 ConditionTimeoutException.class,
@@ -54,7 +77,7 @@ class SensorTest {
      */
     @Test
     void testStopMeasuring() {
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         sensor.startMeasuring();
         this.waitForMeasurements();
@@ -68,7 +91,7 @@ class SensorTest {
      */
     @Test
     void testAddListener() {
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         sensor.startMeasuring();
         await().atMost(100*samplingPeriod, samplingTimeUnit).until(() -> !measurements.isEmpty());
@@ -80,7 +103,7 @@ class SensorTest {
      */
     @Test
     void testRemoveListener() {
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         sensor.removeListener(measurementList);
         sensor.startMeasuring();
@@ -94,7 +117,7 @@ class SensorTest {
     @Test
     void testTakeMeasurement() {
         final long minimumMeasurements = 100L;
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
@@ -112,7 +135,7 @@ class SensorTest {
     @Test
     void testMeasurementSequence() {
         final long minimumMeasurements = 100L;
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
@@ -170,7 +193,7 @@ class SensorTest {
             final long minimumMeasurements,
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
-        final Sensor sensor = new Sensor(samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
+        final Sensor sensor = new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS);
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
