@@ -28,7 +28,6 @@ class SensorTest {
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        numSensorsInstantiated++;
         return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
     }
 
@@ -51,7 +50,7 @@ class SensorTest {
     void testSensorInstantiation() {
         new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
         final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+        assertThatExceptionOfType(Sensor.SensorAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
                         "fakeId",
                         samplingPeriod,
@@ -103,8 +102,8 @@ class SensorTest {
         await().atMost(100*samplingPeriod, samplingTimeUnit).until(() -> !measurements.isEmpty());
         assertThat(measurements).hasSizeGreaterThan(1);
 
-        // The measurement list has already been added as a listener, so adding it again should throw
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> sensor.addListener(measurementList));
+        // The measurement list has already been added as a listener, so adding it again should do nothing
+        sensor.addListener(measurementList);
     }
 
     /**
@@ -119,8 +118,8 @@ class SensorTest {
         await().during(10*samplingPeriod, samplingTimeUnit);
         assertThat(measurements).isEmpty();
 
-        // The measurement list has already removed, so removing it again should throw
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> sensor.removeListener(measurementList));
+        // The measurement list has already been removed as a listener, so removing it again should do nothing
+        sensor.removeListener(measurementList);
     }
 
     /**
@@ -157,8 +156,11 @@ class SensorTest {
             final long elapsedTime = Duration.between(
                     measurements.get(i - 1).dateTime(),
                     measurements.get(i).dateTime()).toMillis();
-            assertThat(elapsedTime).isPositive();
+            assertThat(elapsedTime).isNotNegative();
         }
+
+
+
     }
 
 

@@ -1,5 +1,8 @@
 package com.control_ops.control_system.sensor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Sensor {
+    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
     private boolean isMeasuring = false;
     private final MeasurementBehaviour measurementBehaviour;
 
@@ -20,6 +24,12 @@ public class Sensor {
     private final ScheduledExecutorService scheduler;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
     private static final Set<String> sensorIds = new HashSet<>();
+
+    static class SensorAlreadyExistsException extends RuntimeException {
+        public SensorAlreadyExistsException(String sensorId) {
+            super("Sensor IDs must be unique; a sensor with ID " + sensorId + " already exists");
+        }
+    }
 
     /**
      * Initializes a new sensor object.
@@ -34,45 +44,60 @@ public class Sensor {
             final TimeUnit samplingPeriodUnit,
             final MeasurementUnit measurementUnit,
             final MeasurementBehaviour measurementBehaviour) {
-        if (!sensorIds.add(sensorId)) {
-            throw new IllegalArgumentException("A sensor with ID " + sensorId + " already exists.");
+        if (sensorIds.contains(sensorId)) {
+            throw new SensorAlreadyExistsException(sensorId);
         }
+        sensorIds.add(sensorId);
         this.sensorId = sensorId;
         this.samplingPeriod = samplingPeriod;
         this.samplingPeriodUnit = samplingPeriodUnit;
         this.measurementUnit = measurementUnit;
         this.measurementBehaviour = measurementBehaviour;
         this.scheduler = Executors.newScheduledThreadPool(1);
+        logger.info("A new sensor was created: Sensor ID: {}\tTotal sensors: {}", sensorId, sensorIds.size());
     }
 
     public void startMeasuring() {
-        if (!isMeasuring) {
-            this.scheduler.scheduleAtFixedRate(this::takeMeasurement, 0L, this.samplingPeriod, this.samplingPeriodUnit);
-            this.isMeasuring = true;
+        if (isMeasuring) {
+            logger.warn("Measurement is already enabled for {}", sensorId);
+            return;
         }
+        this.scheduler.scheduleAtFixedRate(this::takeMeasurement, 0L, this.samplingPeriod, this.samplingPeriodUnit);
+        this.isMeasuring = true;
+        logger.info("Measurement was enabled for {}.\tSampling period: {}\tSampling unit: {}", sensorId, samplingPeriod, samplingPeriodUnit);
     }
 
     public void stopMeasuring() {
-        if (isMeasuring) {
-            this.scheduler.shutdown();
-            this.isMeasuring = false;
+        if (!isMeasuring) {
+            logger.warn("Measurement is already disabled for {}", sensorId);
+            return;
         }
+        this.scheduler.shutdown();
+        this.isMeasuring = false;
+        logger.info("Measurement was disabled for {}", sensorId);
     }
 
     public void addListener(final SensorListener sensorListener) {
         if (this.sensorListeners.contains(sensorListener)) {
-            throw new IllegalArgumentException("The received SensorListener is already subscribed");
+            logger.warn("Cannot add the provided SensorListener; it is already subscribed to {}", sensorId);
+            return;
         }
         this.sensorListeners.add(sensorListener);
+        logger.info("The provided SensorListener was added to {}", sensorId);
     }
 
     public void removeListener(final SensorListener sensorListener) {
         if (!this.sensorListeners.contains(sensorListener)) {
-            throw new IllegalArgumentException("The received SensorListener is already unsubscribed");
+            logger.warn("Cannot remove the provided SensorListener; it is not subscribed to {}", sensorId);
+            return;
         }
         this.sensorListeners.remove(sensorListener);
+        logger.info("The provided SensorListener was removed from {}", sensorId);
     }
 
+    /**
+     * Takes a new measurement using the sensor's measurement behaviour.
+     */
     private synchronized void takeMeasurement() {
         Measurement newMeasurement = measurementBehaviour.takeMeasurement(
                 sensorId,
