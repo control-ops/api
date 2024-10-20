@@ -1,5 +1,6 @@
 package com.control_ops.control_system.sensor;
 
+import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
 import org.awaitility.core.ConditionTimeoutException;
@@ -30,10 +31,10 @@ class SensorTest {
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
+        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
     }
 
-    private String generateSensorId() {
+    private String generateInstrumentId() {
         numSensorsInstantiated++;
         return "thermocouple" + numSensorsInstantiated;
     }
@@ -52,7 +53,7 @@ class SensorTest {
     void testSensorInstantiation() {
         new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
         final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
-        assertThatExceptionOfType(Sensor.SensorAlreadyExistsException.class).isThrownBy(
+        assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
                         "fakeId",
                         samplingPeriod,
@@ -210,7 +211,7 @@ class SensorTest {
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
         final Sensor sensor = new Sensor(
-                generateSensorId(),
+                generateInstrumentId(),
                 samplingPeriod,
                 samplingTimeUnit,
                 SignalUnit.CELSIUS,
