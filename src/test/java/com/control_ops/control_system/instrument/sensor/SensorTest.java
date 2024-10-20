@@ -1,5 +1,8 @@
-package com.control_ops.control_system.sensor;
+package com.control_ops.control_system.instrument.sensor;
 
+import com.control_ops.control_system.instrument.InstrumentId;
+import com.control_ops.control_system.instrument.Signal;
+import com.control_ops.control_system.instrument.SignalUnit;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,17 +24,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class SensorTest {
 
     private final MeasurementList measurementList = new MeasurementList();
-    private final List<Measurement> measurements = measurementList.getMeasurements();
+    private final List<Signal> signals = measurementList.getMeasurements();
 
     private long samplingPeriod = 30L;
     private final TimeUnit samplingTimeUnit = TimeUnit.MILLISECONDS;
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        return new Sensor(generateSensorId(), samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
+        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
     }
 
-    private String generateSensorId() {
+    private String generateInstrumentId() {
         numSensorsInstantiated++;
         return "thermocouple" + numSensorsInstantiated;
     }
@@ -40,7 +43,7 @@ class SensorTest {
      * Causes the calling thread to wait until at least one measurement is received.
      */
     private void waitForMeasurements() {
-        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> !measurements.isEmpty());
+        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> !signals.isEmpty());
     }
 
     /**
@@ -48,14 +51,14 @@ class SensorTest {
      */
     @Test
     void testSensorInstantiation() {
-        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, MeasurementUnit.CELSIUS, new SampledMeasurement());
+        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
         final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
-        assertThatExceptionOfType(Sensor.SensorAlreadyExistsException.class).isThrownBy(
+        assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
                         "fakeId",
                         samplingPeriod,
                         samplingTimeUnit,
-                        MeasurementUnit.CELSIUS,
+                        SignalUnit.CELSIUS,
                         measurementBehaviour)
         );
     }
@@ -70,11 +73,11 @@ class SensorTest {
         assertThrows(
                 ConditionTimeoutException.class,
                 this::waitForMeasurements);
-        assertThat(measurements).isEmpty();
+        assertThat(signals).isEmpty();
 
         sensor.startMeasuring();
         this.waitForMeasurements();
-        assertThat(measurements).isNotEmpty();
+        assertThat(signals).isNotEmpty();
     }
 
     /**
@@ -87,7 +90,7 @@ class SensorTest {
         sensor.startMeasuring();
         this.waitForMeasurements();
         sensor.stopMeasuring();
-        measurements.clear();
+        signals.clear();
         assertThrows(ConditionTimeoutException.class, this::waitForMeasurements);
     }
 
@@ -99,8 +102,8 @@ class SensorTest {
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         sensor.startMeasuring();
-        await().atMost(100*samplingPeriod, samplingTimeUnit).until(() -> !measurements.isEmpty());
-        assertThat(measurements).hasSizeGreaterThan(1);
+        await().atMost(100*samplingPeriod, samplingTimeUnit).until(() -> !signals.isEmpty());
+        assertThat(signals).hasSizeGreaterThan(1);
 
         // The measurement list has already been added as a listener, so adding it again should do nothing
         sensor.addListener(measurementList);
@@ -116,7 +119,7 @@ class SensorTest {
         sensor.removeListener(measurementList);
         sensor.startMeasuring();
         await().during(10*samplingPeriod, samplingTimeUnit);
-        assertThat(measurements).isEmpty();
+        assertThat(signals).isEmpty();
 
         // The measurement list has already been removed as a listener, so removing it again should do nothing
         sensor.removeListener(measurementList);
@@ -132,11 +135,11 @@ class SensorTest {
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
-        await().atMost(10, TimeUnit.SECONDS).until(() -> measurements.size() >= minimumMeasurements);
+        await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
-        for (int i = 1; i < measurements.size(); i++) {
-            assertThat(measurements.get(i - 1)).isNotEqualTo(measurements.get(i));
-            assertThat(measurements.get(i).unit()).isEqualTo(MeasurementUnit.CELSIUS);
+        for (int i = 1; i < signals.size(); i++) {
+            assertThat(signals.get(i - 1)).isNotEqualTo(signals.get(i));
+            assertThat(signals.get(i).unit()).isEqualTo(SignalUnit.CELSIUS);
         }
     }
 
@@ -150,12 +153,12 @@ class SensorTest {
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
-        await().atMost(10, TimeUnit.SECONDS).until(() -> measurements.size() >= minimumMeasurements);
+        await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
-        for (int i = 1; i < measurements.size(); i++) {
+        for (int i = 1; i < signals.size(); i++) {
             final long elapsedTime = Duration.between(
-                    measurements.get(i - 1).dateTime(),
-                    measurements.get(i).dateTime()).toMillis();
+                    signals.get(i - 1).dateTime(),
+                    signals.get(i).dateTime()).toMillis();
             assertThat(elapsedTime).isNotNegative();
         }
 
@@ -208,25 +211,25 @@ class SensorTest {
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
         final Sensor sensor = new Sensor(
-                generateSensorId(),
+                generateInstrumentId(),
                 samplingPeriod,
                 samplingTimeUnit,
-                MeasurementUnit.CELSIUS,
+                SignalUnit.CELSIUS,
                 new SampledMeasurement());
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
-        await().atMost(60, TimeUnit.SECONDS).until(() -> measurements.size() >= minimumMeasurements);
+        await().atMost(60, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
 
-        final Measurement firstMeasurement = measurements.getFirst();
-        final Measurement lastMeasurement = measurements.getLast();
+        final Signal firstSignal = signals.getFirst();
+        final Signal lastSignal = signals.getLast();
 
         final double averageSamplingPeriodError = this.calculateSamplingPeriodError(
                 samplingPeriod,
-                measurements.size(),
-                firstMeasurement.dateTime(),
-                lastMeasurement.dateTime());
+                signals.size(),
+                firstSignal.dateTime(),
+                lastSignal.dateTime());
         assertThat(averageSamplingPeriodError).isLessThan(maxFractionalError);
     }
 }

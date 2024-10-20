@@ -1,11 +1,11 @@
-package com.control_ops.control_system.sensor;
+package com.control_ops.control_system.instrument;
 
-public enum MeasurementUnit {
+public enum SignalUnit {
     CELSIUS(PhysicalProperty.TEMPERATURE),
     FAHRENHEIT(PhysicalProperty.TEMPERATURE),
     M3_PER_HOUR(PhysicalProperty.VOLUMETRIC_FLOW);
 
-    MeasurementUnit(final PhysicalProperty physicalProperty) {
+    SignalUnit(final PhysicalProperty physicalProperty) {
         this.physicalProperty = physicalProperty;
     }
 
