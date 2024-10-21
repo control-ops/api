@@ -47,7 +47,7 @@ class SensorTest {
     }
 
     /**
-     * Tests that multiple sensors with the same sensor ID cannot be instantiated.
+     * Tests that multiple sensors with the same instrument ID cannot be instantiated.
      */
     @Test
     void testSensorInstantiation() {

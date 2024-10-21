@@ -3,8 +3,8 @@ package com.control_ops.control_system.instrument;
 public enum SignalUnit {
     CELSIUS(PhysicalProperty.TEMPERATURE),
     FAHRENHEIT(PhysicalProperty.TEMPERATURE),
-    M3_PER_HOUR(PhysicalProperty.VOLUMETRIC_FLOW);
-
+    M3_PER_HOUR(PhysicalProperty.VOLUMETRIC_FLOW),
+    PERCENTAGE(PhysicalProperty.NONE);
     SignalUnit(final PhysicalProperty physicalProperty) {
         this.physicalProperty = physicalProperty;
     }

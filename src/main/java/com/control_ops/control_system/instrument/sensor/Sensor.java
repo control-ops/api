@@ -45,7 +45,12 @@ public class Sensor {
         this.signalUnit = signalUnit;
         this.measurementBehaviour = measurementBehaviour;
         this.scheduler = Executors.newScheduledThreadPool(1);
-        logger.info("A new sensor was created: Sensor ID: {}", instrumentId);
+        logger.info(
+                "A new sensor was created.\tSensor ID: {}\tSampling period: {} {}\tSignal unit: {}",
+                instrumentId,
+                samplingPeriod,
+                samplingPeriodUnit,
+                signalUnit);
     }
 
     public void startMeasuring() {
@@ -55,7 +60,7 @@ public class Sensor {
         }
         this.scheduler.scheduleAtFixedRate(this::takeMeasurement, 0L, this.samplingPeriod, this.samplingPeriodUnit);
         this.isMeasuring = true;
-        logger.info("Measurement was enabled for {}.\tSampling period: {}\tSampling unit: {}", instrumentId, samplingPeriod, samplingPeriodUnit);
+        logger.info("Measurement was enabled for {}.\tSampling period: {} {}", instrumentId, samplingPeriod, samplingPeriodUnit);
     }
 
     public void stopMeasuring() {
