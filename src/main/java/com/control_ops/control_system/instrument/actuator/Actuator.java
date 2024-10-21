@@ -21,6 +21,7 @@ public class Actuator {
         this.instrumentId = new InstrumentId(instrumentId);
         this.signalValue = initialSignalValue;
         this.actuatorListeners = new ArrayList<>();
+        logger.info("A new Actuator was created.\tInstrument ID: {}\tInitial signal value: {}", instrumentId, initialSignalValue);
     }
 
     public void addListener(final ActuatorListener actuatorListener) {
@@ -42,6 +43,7 @@ public class Actuator {
     }
 
     void adjustSignal(final double newSignalValue) {
+        logger.info("Adjusting signal of {}.\tNew signal value: {}", instrumentId, newSignalValue);
         signalValue = newSignalValue;
         final Signal newSignal = new Signal(
                 instrumentId,
