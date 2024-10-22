@@ -14,10 +14,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Sensor {
-    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
+    private Signal currentSignal;
     private boolean isMeasuring = false;
-    private final MeasurementBehaviour measurementBehaviour;
 
+    private final MeasurementBehaviour measurementBehaviour;
     private final InstrumentId instrumentId;
     private final long samplingPeriod;
     private final TimeUnit samplingPeriodUnit;
@@ -25,6 +25,7 @@ public class Sensor {
     private final ScheduledExecutorService scheduler;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
 
+    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
     /**
      * Initializes a new sensor object.
      * @param instrumentId A unique string identifying the sensor
@@ -51,6 +52,10 @@ public class Sensor {
                 samplingPeriod,
                 samplingPeriodUnit,
                 signalUnit);
+    }
+
+    public Signal getCurrentSignal() {
+        return currentSignal;
     }
 
     public void startMeasuring() {
@@ -99,6 +104,7 @@ public class Sensor {
                 instrumentId,
                 signalUnit,
                 ZoneId.of("UTC"));
+        currentSignal = newSignal;
         for (final SensorListener listener : this.sensorListeners) {
             listener.onMeasurement(newSignal);
         }

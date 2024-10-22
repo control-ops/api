@@ -133,6 +133,7 @@ class SensorTest {
         final long minimumMeasurements = 100L;
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
+        assertThat(sensor.getCurrentSignal()).isNull();
 
         sensor.startMeasuring();
         await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
@@ -141,6 +142,8 @@ class SensorTest {
             assertThat(signals.get(i - 1)).isNotEqualTo(signals.get(i));
             assertThat(signals.get(i).unit()).isEqualTo(SignalUnit.CELSIUS);
         }
+
+        assertThat(sensor.getCurrentSignal()).isEqualTo(signals.getLast());
     }
 
     /**
