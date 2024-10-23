@@ -58,6 +58,10 @@ public class Sensor {
         return currentSignal;
     }
 
+    public InstrumentId getInstrumentID() {
+        return instrumentId;
+    }
+
     public void startMeasuring() {
         if (isMeasuring) {
             logger.warn("Measurement is already enabled for {}", instrumentId);

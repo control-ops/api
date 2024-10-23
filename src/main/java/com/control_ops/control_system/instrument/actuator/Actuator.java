@@ -42,7 +42,7 @@ public class Actuator {
         logger.info("The provided ActuatorListener was removed from {}", instrumentId);
     }
 
-    void adjustSignal(final double newSignalValue) {
+    public void adjustSignal(final double newSignalValue) {
         logger.info("Adjusting signal of {}.\tNew signal value: {}", instrumentId, newSignalValue);
         signalValue = newSignalValue;
         final Signal newSignal = new Signal(
@@ -55,7 +55,7 @@ public class Actuator {
         }
     }
 
-    double getSignalValue() {
+    public double getSignalValue() {
         return signalValue;
     }
 }
