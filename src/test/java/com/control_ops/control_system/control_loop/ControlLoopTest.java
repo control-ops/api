@@ -114,4 +114,20 @@ class ControlLoopTest {
         assertThat(controlLoop.getSetPoint()).isEqualTo(2*setPoint);
     }
 
+    @Test
+    void testSwitchControlBehaviour() {
+        controlLoop.startControlling();
+        waitForActuatorAdjustments();
+
+        final double previousOutput = outputList.getSignals().getLast().quantity();
+
+        controlLoop.switchControlBehaviour(new ProportionalControl(2*gain));
+        waitForActuatorAdjustments();
+        final double newOutput = outputList.getSignals().getLast().quantity();
+
+        // The new control behaviour has double the gain of the previous behaviour, so if the switch was successful the
+        // actuator output should double
+        assertThat(newOutput).isEqualTo(2*previousOutput);
+    }
+
 }
