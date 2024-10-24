@@ -19,7 +19,7 @@ public class ControlLoop {
     private final Actuator manipulatedVariable;
     private final long samplingPeriod;
     private final TimeUnit samplingPeriodUnit;
-    private final ScheduledExecutorService executor;
+    private ScheduledExecutorService scheduler;
 
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
@@ -36,40 +36,34 @@ public class ControlLoop {
         this.samplingPeriod = samplingPeriod;
         this.samplingPeriodUnit = samplingPeriodUnit;
         this.controlBehaviour = controlBehaviour;
-        this.executor = Executors.newScheduledThreadPool(1);
     }
 
-    void updateManipulatedVariable() {
-        final double newActuatorOutput = controlBehaviour.calculateActuatorValue(
-                setPoint,
-                controlledVariable.getCurrentSignal().quantity()
-        );
-        manipulatedVariable.adjustSignal(newActuatorOutput);
-    }
-
-    void startControlling() {
-        if (isControlling) {
-            logger.warn("{} control loop is already controlling", controlledVariable.getInstrumentID());
-        } else {
-            this.executor.scheduleAtFixedRate(
+    public void startControlling() {
+        if (!isControlling) {
+            this.scheduler = Executors.newScheduledThreadPool(1);
+            this.scheduler.scheduleAtFixedRate(
                     this::updateManipulatedVariable,
                     0L,
                     samplingPeriod,
                     samplingPeriodUnit);
             isControlling = true;
-        }
-    }
-
-    void stopControlling() {
-        if (!isControlling) {
-            logger.warn("Cannot stop {} control loop; it is already in manual mode", controlledVariable.getInstrumentID());
+            logger.info("{} control loop started", controlledVariable.getInstrumentID());
         } else {
-            this.executor.shutdown();
-            isControlling = true;
+            logger.warn("{} control loop is already controlling", controlledVariable.getInstrumentID());
         }
     }
 
-    void updateSetPoint(final double newSetPoint) {
+    public void stopControlling() {
+        if (isControlling) {
+            this.scheduler.shutdown();
+            isControlling = false;
+            logger.info("{} control loop stopped", controlledVariable.getInstrumentID());
+        } else {
+            logger.warn("Cannot stop {} control loop; it is already in manual mode", controlledVariable.getInstrumentID());
+        }
+    }
+
+    public void updateSetPoint(final double newSetPoint) {
         final double oldSetPoint = setPoint;
         setPoint = newSetPoint;
         logger.info("Set point updated from {} tp {} on control loop {}",
@@ -78,12 +72,24 @@ public class ControlLoop {
                 controlledVariable.getInstrumentID());
     }
 
-    void switchControlBehaviour(final ControlBehaviour newControlBehaviour) {
+    public void switchControlBehaviour(final ControlBehaviour newControlBehaviour) {
         final ControlBehaviour oldControlBehaviour = this.controlBehaviour;
         this.controlBehaviour = newControlBehaviour;
         logger.info("Control behaviour switched from {} tp {} on control loop {}",
                 oldControlBehaviour,
                 newControlBehaviour,
                 controlledVariable.getInstrumentID());
+    }
+
+    public double getSetPoint() {
+        return setPoint;
+    }
+
+    private synchronized void updateManipulatedVariable() {
+        final double newActuatorOutput = controlBehaviour.calculateActuatorValue(
+                setPoint,
+                controlledVariable.getCurrentSignal().quantity()
+        );
+        manipulatedVariable.adjustSignal(newActuatorOutput);
     }
 }

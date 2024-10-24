@@ -31,7 +31,7 @@ class SensorTest {
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
+        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
     }
 
     private String generateInstrumentId() {
@@ -43,7 +43,8 @@ class SensorTest {
      * Causes the calling thread to wait until at least one measurement is received.
      */
     private void waitForMeasurements() {
-        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> !signals.isEmpty());
+        final long initialNumMeasurements = signals.size();
+        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> signals.size() > initialNumMeasurements);
     }
 
     /**
@@ -51,8 +52,8 @@ class SensorTest {
      */
     @Test
     void testSensorInstantiation() {
-        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
-        final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
+        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
+        final MeasurementBehaviour measurementBehaviour = new RandomMeasurement();
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
                         "fakeId",
@@ -90,8 +91,49 @@ class SensorTest {
         sensor.startMeasuring();
         this.waitForMeasurements();
         sensor.stopMeasuring();
-        signals.clear();
         assertThrows(ConditionTimeoutException.class, this::waitForMeasurements);
+    }
+
+    @Test
+    void testMultipleStartsAndStops() {
+        final Sensor sensor = makeDefaultSensor();
+        sensor.addListener(measurementList);
+
+        int previousSize = 0;
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
     }
 
     /**
@@ -164,9 +206,6 @@ class SensorTest {
                     signals.get(i).dateTime()).toMillis();
             assertThat(elapsedTime).isNotNegative();
         }
-
-
-
     }
 
 
@@ -218,7 +257,7 @@ class SensorTest {
                 samplingPeriod,
                 samplingTimeUnit,
                 SignalUnit.CELSIUS,
-                new SampledMeasurement());
+                new RandomMeasurement());
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();

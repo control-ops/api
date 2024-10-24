@@ -16,13 +16,13 @@ import java.util.concurrent.TimeUnit;
 public class Sensor {
     private Signal currentSignal;
     private boolean isMeasuring = false;
+    private ScheduledExecutorService scheduler;
 
     private final MeasurementBehaviour measurementBehaviour;
     private final InstrumentId instrumentId;
     private final long samplingPeriod;
     private final TimeUnit samplingPeriodUnit;
     private final SignalUnit signalUnit;
-    private final ScheduledExecutorService scheduler;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
 
     private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
@@ -45,7 +45,7 @@ public class Sensor {
         this.samplingPeriodUnit = samplingPeriodUnit;
         this.signalUnit = signalUnit;
         this.measurementBehaviour = measurementBehaviour;
-        this.scheduler = Executors.newScheduledThreadPool(1);
+
         logger.info(
                 "A new sensor was created.\tSensor ID: {}\tSampling period: {} {}\tSignal unit: {}",
                 instrumentId,
@@ -67,6 +67,7 @@ public class Sensor {
             logger.warn("Measurement is already enabled for {}", instrumentId);
             return;
         }
+        this.scheduler = Executors.newScheduledThreadPool(1);
         this.scheduler.scheduleAtFixedRate(this::takeMeasurement, 0L, this.samplingPeriod, this.samplingPeriodUnit);
         this.isMeasuring = true;
         logger.info("Measurement was enabled for {}.\tSampling period: {} {}", instrumentId, samplingPeriod, samplingPeriodUnit);

@@ -17,7 +17,7 @@ public class Actuator {
     private final List<ActuatorListener> actuatorListeners;
     private double signalValue;
 
-    Actuator(final String instrumentId, final double initialSignalValue) {
+    public Actuator(final String instrumentId, final double initialSignalValue) {
         this.instrumentId = new InstrumentId(instrumentId);
         this.signalValue = initialSignalValue;
         this.actuatorListeners = new ArrayList<>();
