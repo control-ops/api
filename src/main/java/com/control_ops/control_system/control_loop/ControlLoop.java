@@ -16,6 +16,7 @@ public class ControlLoop {
     private final Sensor controlledVariable;
     private final Actuator manipulatedVariable;
     private final PeriodicExecutor periodicExecutor;
+    private static final ControlLoopRegistry controlLoopRegistry = new ControlLoopRegistry();
 
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
@@ -26,6 +27,8 @@ public class ControlLoop {
             final long updatePeriod,
             final TimeUnit updatePeriodUnit,
             final ControlBehaviour controlBehaviour) {
+        controlLoopRegistry.registerControlLoop(this, controlledVariable, manipulatedVariable);
+
         this.controlledVariable = controlledVariable;
         this.manipulatedVariable = manipulatedVariable;
         this.setPoint = setPoint;
@@ -69,5 +72,10 @@ public class ControlLoop {
                 controlledVariable.getCurrentSignal().quantity()
         );
         manipulatedVariable.adjustSignal(newActuatorOutput);
+    }
+
+    @Override
+    public String toString() {
+        return "control loop";
     }
 }
