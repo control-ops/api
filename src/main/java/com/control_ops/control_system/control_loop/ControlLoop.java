@@ -1,25 +1,21 @@
 package com.control_ops.control_system.control_loop;
 
+import com.control_ops.control_system.PeriodicExecutor;
 import com.control_ops.control_system.instrument.actuator.Actuator;
 import com.control_ops.control_system.instrument.sensor.Sensor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ControlLoop {
 
     private double setPoint;
     private ControlBehaviour controlBehaviour;
-    private boolean isControlling = false;
 
     private final Sensor controlledVariable;
     private final Actuator manipulatedVariable;
-    private final long samplingPeriod;
-    private final TimeUnit samplingPeriodUnit;
-    private ScheduledExecutorService scheduler;
+    private final PeriodicExecutor periodicExecutor;
 
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
@@ -33,34 +29,16 @@ public class ControlLoop {
         this.controlledVariable = controlledVariable;
         this.manipulatedVariable = manipulatedVariable;
         this.setPoint = setPoint;
-        this.samplingPeriod = samplingPeriod;
-        this.samplingPeriodUnit = samplingPeriodUnit;
+        this.periodicExecutor = new PeriodicExecutor("test", samplingPeriod, samplingPeriodUnit, this::updateManipulatedVariable);
         this.controlBehaviour = controlBehaviour;
     }
 
     public void startControlling() {
-        if (!isControlling) {
-            this.scheduler = Executors.newScheduledThreadPool(1);
-            this.scheduler.scheduleAtFixedRate(
-                    this::updateManipulatedVariable,
-                    0L,
-                    samplingPeriod,
-                    samplingPeriodUnit);
-            isControlling = true;
-            logger.info("{} control loop started", controlledVariable.getInstrumentID());
-        } else {
-            logger.warn("{} control loop is already controlling", controlledVariable.getInstrumentID());
-        }
+        periodicExecutor.start();
     }
 
     public void stopControlling() {
-        if (isControlling) {
-            this.scheduler.shutdown();
-            isControlling = false;
-            logger.info("{} control loop stopped", controlledVariable.getInstrumentID());
-        } else {
-            logger.warn("Cannot stop {} control loop; it is already in manual mode", controlledVariable.getInstrumentID());
-        }
+        periodicExecutor.stop();
     }
 
     public void updateSetPoint(final double newSetPoint) {
