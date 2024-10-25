@@ -28,9 +28,9 @@ class ControlLoopTest {
     private final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     private final double gain = 1.0;
     private final OutputList outputList = new OutputList();
-    private final Actuator actuator = new Actuator("actuator" + testCount, 0.0);
+    private final Actuator actuator = new Actuator("ControlLoopTest::actuator" + testCount, 0.0);
     private final Sensor sensor = new Sensor(
-            "sensor" + testCount, sensorSamplingPeriod, timeUnit, SignalUnit.CELSIUS, new ConstantMeasurement(0.0));
+            "ControlLoopTest::sensor" + testCount, sensorSamplingPeriod, timeUnit, SignalUnit.CELSIUS, new ConstantMeasurement(0.0));
     private final ControlBehaviour controlBehaviour = new ProportionalControl(gain);
     private final double setPoint = 2.0;
 
@@ -52,11 +52,12 @@ class ControlLoopTest {
         sensor.startMeasuring();
         testCount++;
     }
-    
-    private void waitForActuatorAdjustments(final int numAdjustments, final long maxWaitDurationMs) {
+
+    private void waitForActuatorAdjustments(final int numAdjustments, final long periodMs) {
+        final long maxWaitDurationMs = Math.max(200, 2*numAdjustments*periodMs);
         final int initialSize = outputList.getSignals().size();
         await().atMost(maxWaitDurationMs, timeUnit)
-                .pollDelay(maxWaitDurationMs / 2, TimeUnit.MILLISECONDS)
+                .pollDelay(0L, TimeUnit.MILLISECONDS)
                 .until(() -> outputList.getSignals().size() - initialSize >= numAdjustments);
     }
 
@@ -64,21 +65,21 @@ class ControlLoopTest {
     void testStartControlling() {
         final ControlLoop controlLoop = makeDefaultControlLoop();
         assertThatExceptionOfType(ConditionTimeoutException.class).isThrownBy(
-                () -> waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod));
+                () -> waitForActuatorAdjustments(1, controlLoopUpdatePeriod));
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
     }
 
     @Test
     void testStopControlling() {
         final ControlLoop controlLoop = makeDefaultControlLoop();
         assertThatExceptionOfType(ConditionTimeoutException.class).isThrownBy(
-                () -> waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod));
+                () -> waitForActuatorAdjustments(1, controlLoopUpdatePeriod));
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         controlLoop.stopControlling();
         assertThatExceptionOfType(ConditionTimeoutException.class).isThrownBy(
-                () -> waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod));
+                () -> waitForActuatorAdjustments(1, controlLoopUpdatePeriod));
     }
 
     @Test
@@ -86,37 +87,37 @@ class ControlLoopTest {
         final ControlLoop controlLoop = makeDefaultControlLoop();
         int previousSize = 0;
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
         previousSize = outputList.getSignals().size();
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
         previousSize = outputList.getSignals().size();
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
         previousSize = outputList.getSignals().size();
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
         previousSize = outputList.getSignals().size();
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
         previousSize = outputList.getSignals().size();
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         assertThat(outputList.getSignals()).hasSizeGreaterThan(previousSize);
         controlLoop.stopControlling();
     }
@@ -132,12 +133,12 @@ class ControlLoopTest {
     void testSwitchControlBehaviour() {
         final ControlLoop controlLoop = makeDefaultControlLoop();
         controlLoop.startControlling();
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
 
         final double previousOutput = outputList.getSignals().getLast().quantity();
 
         controlLoop.switchControlBehaviour(new ProportionalControl(2*gain));
-        waitForActuatorAdjustments(1, 2*controlLoopUpdatePeriod);
+        waitForActuatorAdjustments(1, controlLoopUpdatePeriod);
         final double newOutput = outputList.getSignals().getLast().quantity();
 
         // The new control behaviour has double the gain of the previous behaviour, so if the switch was successful the
@@ -161,7 +162,7 @@ class ControlLoopTest {
                 controlBehaviour);
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(numUpdates, (numUpdates + 2)*updatePeriodMs);
+        waitForActuatorAdjustments(numUpdates, updatePeriodMs);
         controlLoop.stopControlling();
 
         List<ZonedDateTime> updateTimes = new ArrayList<>(outputList.getSignals().size());
@@ -187,7 +188,7 @@ class ControlLoopTest {
                 controlBehaviour);
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(numUpdates, (numUpdates + 2)*updatePeriodMs);
+        waitForActuatorAdjustments(numUpdates, updatePeriodMs);
         controlLoop.stopControlling();
 
         List<ZonedDateTime> updateTimes = new ArrayList<>(outputList.getSignals().size());

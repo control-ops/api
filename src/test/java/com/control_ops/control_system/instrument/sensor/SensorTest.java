@@ -37,7 +37,7 @@ class SensorTest {
 
     private String generateInstrumentId() {
         numSensorsInstantiated++;
-        return "thermocouple" + numSensorsInstantiated;
+        return "SensorTest::thermocouple" + numSensorsInstantiated;
     }
 
     /**
