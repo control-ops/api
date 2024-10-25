@@ -53,11 +53,11 @@ class SensorTest {
      */
     @Test
     void testSensorInstantiation() {
-        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
+        new Sensor("SensorTest::duplicatedId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
         final MeasurementBehaviour measurementBehaviour = new RandomMeasurement();
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
-                        "fakeId",
+                        "SensorTest::duplicatedId",
                         samplingPeriod,
                         samplingTimeUnit,
                         SignalUnit.CELSIUS,

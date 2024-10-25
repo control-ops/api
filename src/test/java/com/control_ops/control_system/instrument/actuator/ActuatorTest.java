@@ -8,9 +8,9 @@ import static org.assertj.core.api.Assertions.*;
 class ActuatorTest {
     @Test
     void testInitialization() {
-        new Actuator("duplicatedId", 0d);
+        new Actuator("ActuatorTest::duplicatedId", 0d);
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(() ->
-                new Actuator("duplicatedId", 0d));
+                new Actuator("ActuatorTest::duplicatedId", 0d));
     }
 
     @Test
