@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 
-class PeriodicExecutorTest {
+public class PeriodicExecutorTest {
 
     private final List<ZonedDateTime> executionTimes = new ArrayList<>();
 

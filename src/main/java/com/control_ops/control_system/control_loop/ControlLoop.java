@@ -23,13 +23,13 @@ public class ControlLoop {
             final Sensor controlledVariable,
             final Actuator manipulatedVariable,
             final double setPoint,
-            final long samplingPeriod,
-            final TimeUnit samplingPeriodUnit,
+            final long updatePeriod,
+            final TimeUnit updatePeriodUnit,
             final ControlBehaviour controlBehaviour) {
         this.controlledVariable = controlledVariable;
         this.manipulatedVariable = manipulatedVariable;
         this.setPoint = setPoint;
-        this.periodicExecutor = new PeriodicExecutor("test", samplingPeriod, samplingPeriodUnit, this::updateManipulatedVariable);
+        this.periodicExecutor = new PeriodicExecutor("test", updatePeriod, updatePeriodUnit, this::updateManipulatedVariable);
         this.controlBehaviour = controlBehaviour;
     }
 
