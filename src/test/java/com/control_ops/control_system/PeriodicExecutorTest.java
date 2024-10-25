@@ -20,13 +20,17 @@ public class PeriodicExecutorTest {
 
     private final List<ZonedDateTime> executionTimes = new ArrayList<>();
 
-    @Test
-    void testStart() {
-        final PeriodicExecutor periodicExecutor = new PeriodicExecutor(
+    private PeriodicExecutor makeDefaultPeriodicExecutor() {
+        return new PeriodicExecutor(
                 "scheduler",
                 50,
                 TimeUnit.MILLISECONDS,
                 this::addExecutionTime);
+    }
+
+    @Test
+    void testStart() {
+        final PeriodicExecutor periodicExecutor = makeDefaultPeriodicExecutor();
         periodicExecutor.start();
         final int numExecutions = 5;
         waitForExecutions(numExecutions, 2000);
@@ -35,11 +39,7 @@ public class PeriodicExecutorTest {
 
     @Test
     void testStop() {
-        final PeriodicExecutor periodicExecutor = new PeriodicExecutor(
-                "scheduler",
-                50,
-                TimeUnit.MILLISECONDS,
-                this::addExecutionTime);
+        final PeriodicExecutor periodicExecutor = makeDefaultPeriodicExecutor();
         periodicExecutor.start();
         waitForExecutions(1, 2000);
         periodicExecutor.stop();
@@ -48,11 +48,7 @@ public class PeriodicExecutorTest {
 
     @Test
     void testMultipleStartsAndStops() {
-        final PeriodicExecutor periodicExecutor = new PeriodicExecutor(
-                "scheduler",
-                50,
-                TimeUnit.MILLISECONDS,
-                this::addExecutionTime);
+        final PeriodicExecutor periodicExecutor = makeDefaultPeriodicExecutor();
 
         final int waitDurationMs = 200;
         int previousSize = 0;
@@ -147,6 +143,9 @@ public class PeriodicExecutorTest {
         assertThat(errorFraction).isLessThanOrEqualTo(maxErrorFraction);
     }
 
+    /**
+     * Asserts that a list of execution times are sorted chronologically from oldest to most recent.
+     */
     public static void assertExecutionSequence(final List<ZonedDateTime> executionTimes) {
         for (int i = 1; i < executionTimes.size(); i++) {
             final long elapsedTime = Duration.between(

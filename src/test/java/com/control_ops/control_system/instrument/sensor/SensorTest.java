@@ -44,7 +44,7 @@ class SensorTest {
      * Causes the calling thread to wait until at least one measurement is received.
      */
     private void waitForMeasurements() {
-        final long initialNumMeasurements = signals.size();
+        final int initialNumMeasurements = signals.size();
         await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> signals.size() > initialNumMeasurements);
     }
 
@@ -173,7 +173,7 @@ class SensorTest {
      */
     @Test
     void testTakeMeasurement() {
-        final long minimumMeasurements = 100L;
+        final int minimumMeasurements = 100;
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
         assertThat(sensor.getCurrentSignal()).isNull();
@@ -194,7 +194,7 @@ class SensorTest {
      */
     @Test
     void testMeasurementSequence() {
-        final long minimumMeasurements = 100L;
+        final int minimumMeasurements = 100;
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
 
@@ -226,7 +226,7 @@ class SensorTest {
     })
     void testSamplingPeriod(
             final long expectedSamplingPeriod,
-            final long minimumMeasurements,
+            final int minimumMeasurements,
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
         final Sensor sensor = new Sensor(

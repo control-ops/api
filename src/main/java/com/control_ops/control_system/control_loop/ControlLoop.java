@@ -19,7 +19,7 @@ public class ControlLoop {
 
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
-    ControlLoop(
+    public ControlLoop(
             final Sensor controlledVariable,
             final Actuator manipulatedVariable,
             final double setPoint,
