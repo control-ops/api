@@ -96,4 +96,9 @@ public class Sensor {
             listener.onMeasurement(newSignal);
         }
     }
+
+    @Override
+    public String toString() {
+        return instrumentId.toString();
+    }
 }

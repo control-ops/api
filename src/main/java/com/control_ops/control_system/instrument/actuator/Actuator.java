@@ -58,4 +58,9 @@ public class Actuator {
     public double getSignalValue() {
         return signalValue;
     }
+
+    @Override
+    public String toString() {
+        return instrumentId.toString();
+    }
 }

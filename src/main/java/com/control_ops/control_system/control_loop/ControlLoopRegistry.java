@@ -38,7 +38,7 @@ public class ControlLoopRegistry {
 
     static class RegistrationDuplicationException extends RuntimeException {
         private RegistrationDuplicationException(final Object object) {
-            super(object + " has already been registered");
+            super(object.toString() + " has already been registered");
         }
     }
 
