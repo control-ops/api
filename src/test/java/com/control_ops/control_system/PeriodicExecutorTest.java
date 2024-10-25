@@ -75,6 +75,24 @@ public class PeriodicExecutorTest {
         periodicExecutor.stop();
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "100, 50",
+            "500, 10",
+            "1000, 5"
+    })
+    void testExecutionSequence(final long executionPeriodMs, final int numExecutions) {
+        final PeriodicExecutor periodicExecutor = new PeriodicExecutor(
+                "test periodic executor",
+                executionPeriodMs,
+                TimeUnit.MILLISECONDS,
+                this::addExecutionTime);
+        periodicExecutor.start();
+        waitForExecutions(numExecutions, (numExecutions + 2)*executionPeriodMs);
+        periodicExecutor.stop();
+        assertExecutionSequence(executionTimes);
+    }
+
     /**
      * Tests that the actual time interval between executions matches the Scheduler's execution period.
      * <br><br>
@@ -127,5 +145,14 @@ public class PeriodicExecutorTest {
         final double errorFraction =
                 Math.abs(actualExecutionPeriodMs - expectedExecutionPeriodMs) / expectedExecutionPeriodMs;
         assertThat(errorFraction).isLessThanOrEqualTo(maxErrorFraction);
+    }
+
+    public static void assertExecutionSequence(final List<ZonedDateTime> executionTimes) {
+        for (int i = 1; i < executionTimes.size(); i++) {
+            final long elapsedTime = Duration.between(
+                    executionTimes.get(i - 1),
+                    executionTimes.get(i)).toMillis();
+            assertThat(elapsedTime).isNotNegative();
+        }
     }
 }

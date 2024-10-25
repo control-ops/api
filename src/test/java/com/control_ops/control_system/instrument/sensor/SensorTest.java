@@ -1,5 +1,6 @@
 package com.control_ops.control_system.instrument.sensor;
 
+import com.control_ops.control_system.PeriodicExecutorTest;
 import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
@@ -8,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -200,35 +201,11 @@ class SensorTest {
         sensor.startMeasuring();
         await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
-        for (int i = 1; i < signals.size(); i++) {
-            final long elapsedTime = Duration.between(
-                    signals.get(i - 1).dateTime(),
-                    signals.get(i).dateTime()).toMillis();
-            assertThat(elapsedTime).isNotNegative();
-        }
+        List<ZonedDateTime> measurementTimes = new ArrayList<>();
+        signals.forEach(s -> measurementTimes.add(s.dateTime()));
+
+        PeriodicExecutorTest.assertExecutionSequence(measurementTimes);
     }
-
-
-    /**
-     * Calculates the fractional error between an expected sampling period and an actual sampling period. The actual
-     * sampling period is calculating by comparing the total time measurements were being taken to the number of
-     * measurements that were taken.
-     * @param expectedSamplingPeriod The sampling period that was set on the sensor
-     * @param numMeasurements The total number of measurements that were exported by the sensor
-     * @param firstMeasurementTime The time at which the sensor took the first measurement
-     * @param lastMeasurementTime The time at which the sensor took the last measurement
-     * @return The fractional error between the expected and actual sampling periods
-     */
-    double calculateSamplingPeriodError(
-            long expectedSamplingPeriod,
-            long numMeasurements,
-            final ZonedDateTime firstMeasurementTime,
-            final ZonedDateTime lastMeasurementTime) {
-        final long totalDuration = Duration.between(firstMeasurementTime, lastMeasurementTime).toMillis();
-        final double actualSamplingPeriod = (double)totalDuration / (double)(numMeasurements - 1);
-        return Math.abs((actualSamplingPeriod - (double)expectedSamplingPeriod) / (double)expectedSamplingPeriod);
-    }
-
 
     /**
      * Tests that the actual time interval between measurements matches the one set using the sensor's samplingPeriod
@@ -264,14 +241,9 @@ class SensorTest {
         await().atMost(60, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
 
-        final Signal firstSignal = signals.getFirst();
-        final Signal lastSignal = signals.getLast();
+        List<ZonedDateTime> measurementTimes = new ArrayList<>();
+        signals.forEach(s -> measurementTimes.add(s.dateTime()));
 
-        final double averageSamplingPeriodError = this.calculateSamplingPeriodError(
-                samplingPeriod,
-                signals.size(),
-                firstSignal.dateTime(),
-                lastSignal.dateTime());
-        assertThat(averageSamplingPeriodError).isLessThan(maxFractionalError);
+        PeriodicExecutorTest.assertExecutionPeriod(measurementTimes, samplingPeriod, samplingTimeUnit, maxFractionalError);
     }
 }

@@ -145,6 +145,30 @@ class ControlLoopTest {
         assertThat(newOutput).isEqualTo(2*previousOutput);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "100, 50",
+            "500, 10",
+            "1000, 5"
+    })
+    void testUpdateSequence(final long updatePeriodMs, final int numUpdates) {
+        final ControlLoop controlLoop = new ControlLoop(
+                sensor,
+                actuator,
+                setPoint,
+                updatePeriodMs,
+                TimeUnit.MILLISECONDS,
+                controlBehaviour);
+
+        controlLoop.startControlling();
+        waitForActuatorAdjustments(numUpdates, (numUpdates + 2)*updatePeriodMs);
+        controlLoop.stopControlling();
+
+        List<ZonedDateTime> updateTimes = new ArrayList<>(outputList.getSignals().size());
+        outputList.getSignals().forEach(s -> updateTimes.add(s.dateTime()));
+
+        PeriodicExecutorTest.assertExecutionSequence(updateTimes);
+    }
 
     @ParameterizedTest
     @CsvSource({
@@ -152,7 +176,7 @@ class ControlLoopTest {
             "500, 15",
             "1000, 10"
     })
-    void testUpdatePeriod(final long updatePeriodMs, final int numAdjustments) {
+    void testUpdatePeriod(final long updatePeriodMs, final int numUpdates) {
 
         final ControlLoop controlLoop = new ControlLoop(
                 sensor,
@@ -163,7 +187,7 @@ class ControlLoopTest {
                 controlBehaviour);
 
         controlLoop.startControlling();
-        waitForActuatorAdjustments(numAdjustments, (numAdjustments + 2)*updatePeriodMs);
+        waitForActuatorAdjustments(numUpdates, (numUpdates + 2)*updatePeriodMs);
         controlLoop.stopControlling();
 
         List<ZonedDateTime> updateTimes = new ArrayList<>(outputList.getSignals().size());
