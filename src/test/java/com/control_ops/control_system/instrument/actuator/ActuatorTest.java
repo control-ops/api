@@ -8,15 +8,15 @@ import static org.assertj.core.api.Assertions.*;
 class ActuatorTest {
     @Test
     void testInitialization() {
-        new Actuator("duplicatedId", 0d);
+        new Actuator("ActuatorTest::duplicatedId", 0d);
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(() ->
-                new Actuator("duplicatedId", 0d));
+                new Actuator("ActuatorTest::duplicatedId", 0d));
     }
 
     @Test
     void testAddListener() {
         final OutputList outputList = new OutputList();
-        final Actuator actuator = new Actuator("actuator1", 0.0);
+        final Actuator actuator = new Actuator("ActuatorTest::actuator1", 0.0);
         actuator.adjustSignal(50.0);
         assertThat(outputList.getSignals()).isEmpty();
 
@@ -30,7 +30,7 @@ class ActuatorTest {
     @Test
     void testRemoveListener() {
         final OutputList outputList = new OutputList();
-        final Actuator actuator = new Actuator("actuator2", 0.0);
+        final Actuator actuator = new Actuator("ActuatorTest::actuator2", 0.0);
         actuator.addListener(outputList);
         actuator.adjustSignal(25.0);
         actuator.removeListener(outputList);
@@ -42,7 +42,7 @@ class ActuatorTest {
 
     @Test
     void testAdjustSignal() {
-        final Actuator actuator = new Actuator("actuator3", 0.0);
+        final Actuator actuator = new Actuator("ActuatorTest::actuator3", 0.0);
         actuator.adjustSignal(25.0);
         assertThat(actuator.getSignalValue()).isEqualTo(25.0);
         actuator.adjustSignal(50.0);

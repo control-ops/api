@@ -1,5 +1,6 @@
 package com.control_ops.control_system.instrument.sensor;
 
+import com.control_ops.control_system.PeriodicExecutorTest;
 import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
@@ -8,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,19 +32,20 @@ class SensorTest {
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
+        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
     }
 
     private String generateInstrumentId() {
         numSensorsInstantiated++;
-        return "thermocouple" + numSensorsInstantiated;
+        return "SensorTest::thermocouple" + numSensorsInstantiated;
     }
 
     /**
      * Causes the calling thread to wait until at least one measurement is received.
      */
     private void waitForMeasurements() {
-        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> !signals.isEmpty());
+        final int initialNumMeasurements = signals.size();
+        await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> signals.size() > initialNumMeasurements);
     }
 
     /**
@@ -51,11 +53,11 @@ class SensorTest {
      */
     @Test
     void testSensorInstantiation() {
-        new Sensor("fakeId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new SampledMeasurement());
-        final MeasurementBehaviour measurementBehaviour = new SampledMeasurement();
+        new Sensor("SensorTest::duplicatedId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
+        final MeasurementBehaviour measurementBehaviour = new RandomMeasurement();
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
                 () -> new Sensor(
-                        "fakeId",
+                        "SensorTest::duplicatedId",
                         samplingPeriod,
                         samplingTimeUnit,
                         SignalUnit.CELSIUS,
@@ -90,8 +92,49 @@ class SensorTest {
         sensor.startMeasuring();
         this.waitForMeasurements();
         sensor.stopMeasuring();
-        signals.clear();
         assertThrows(ConditionTimeoutException.class, this::waitForMeasurements);
+    }
+
+    @Test
+    void testMultipleStartsAndStops() {
+        final Sensor sensor = makeDefaultSensor();
+        sensor.addListener(measurementList);
+
+        int previousSize = 0;
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
+        previousSize = signals.size();
+
+        sensor.startMeasuring();
+        waitForMeasurements();
+        assertThat(signals).hasSizeGreaterThan(previousSize);
+        sensor.stopMeasuring();
     }
 
     /**
@@ -130,9 +173,10 @@ class SensorTest {
      */
     @Test
     void testTakeMeasurement() {
-        final long minimumMeasurements = 100L;
+        final int minimumMeasurements = 100;
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
+        assertThat(sensor.getCurrentSignal()).isNull();
 
         sensor.startMeasuring();
         await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
@@ -141,6 +185,8 @@ class SensorTest {
             assertThat(signals.get(i - 1)).isNotEqualTo(signals.get(i));
             assertThat(signals.get(i).unit()).isEqualTo(SignalUnit.CELSIUS);
         }
+
+        assertThat(sensor.getCurrentSignal()).isEqualTo(signals.getLast());
     }
 
     /**
@@ -148,45 +194,18 @@ class SensorTest {
      */
     @Test
     void testMeasurementSequence() {
-        final long minimumMeasurements = 100L;
+        final int minimumMeasurements = 100;
         final Sensor sensor = makeDefaultSensor();
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
         await().atMost(10, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
-        for (int i = 1; i < signals.size(); i++) {
-            final long elapsedTime = Duration.between(
-                    signals.get(i - 1).dateTime(),
-                    signals.get(i).dateTime()).toMillis();
-            assertThat(elapsedTime).isNotNegative();
-        }
+        List<ZonedDateTime> measurementTimes = new ArrayList<>();
+        signals.forEach(s -> measurementTimes.add(s.dateTime()));
 
-
-
+        PeriodicExecutorTest.assertExecutionSequence(measurementTimes);
     }
-
-
-    /**
-     * Calculates the fractional error between an expected sampling period and an actual sampling period. The actual
-     * sampling period is calculating by comparing the total time measurements were being taken to the number of
-     * measurements that were taken.
-     * @param expectedSamplingPeriod The sampling period that was set on the sensor
-     * @param numMeasurements The total number of measurements that were exported by the sensor
-     * @param firstMeasurementTime The time at which the sensor took the first measurement
-     * @param lastMeasurementTime The time at which the sensor took the last measurement
-     * @return The fractional error between the expected and actual sampling periods
-     */
-    double calculateSamplingPeriodError(
-            long expectedSamplingPeriod,
-            long numMeasurements,
-            final ZonedDateTime firstMeasurementTime,
-            final ZonedDateTime lastMeasurementTime) {
-        final long totalDuration = Duration.between(firstMeasurementTime, lastMeasurementTime).toMillis();
-        final double actualSamplingPeriod = (double)totalDuration / (double)(numMeasurements - 1);
-        return Math.abs((actualSamplingPeriod - (double)expectedSamplingPeriod) / (double)expectedSamplingPeriod);
-    }
-
 
     /**
      * Tests that the actual time interval between measurements matches the one set using the sensor's samplingPeriod
@@ -207,7 +226,7 @@ class SensorTest {
     })
     void testSamplingPeriod(
             final long expectedSamplingPeriod,
-            final long minimumMeasurements,
+            final int minimumMeasurements,
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
         final Sensor sensor = new Sensor(
@@ -215,21 +234,16 @@ class SensorTest {
                 samplingPeriod,
                 samplingTimeUnit,
                 SignalUnit.CELSIUS,
-                new SampledMeasurement());
+                new RandomMeasurement());
         sensor.addListener(measurementList);
 
         sensor.startMeasuring();
         await().atMost(60, TimeUnit.SECONDS).until(() -> signals.size() >= minimumMeasurements);
         sensor.stopMeasuring();
 
-        final Signal firstSignal = signals.getFirst();
-        final Signal lastSignal = signals.getLast();
+        List<ZonedDateTime> measurementTimes = new ArrayList<>();
+        signals.forEach(s -> measurementTimes.add(s.dateTime()));
 
-        final double averageSamplingPeriodError = this.calculateSamplingPeriodError(
-                samplingPeriod,
-                signals.size(),
-                firstSignal.dateTime(),
-                lastSignal.dateTime());
-        assertThat(averageSamplingPeriodError).isLessThan(maxFractionalError);
+        PeriodicExecutorTest.assertExecutionPeriod(measurementTimes, samplingPeriod, samplingTimeUnit, maxFractionalError);
     }
 }

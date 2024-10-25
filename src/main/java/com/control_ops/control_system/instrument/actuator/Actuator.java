@@ -17,7 +17,7 @@ public class Actuator {
     private final List<ActuatorListener> actuatorListeners;
     private double signalValue;
 
-    Actuator(final String instrumentId, final double initialSignalValue) {
+    public Actuator(final String instrumentId, final double initialSignalValue) {
         this.instrumentId = new InstrumentId(instrumentId);
         this.signalValue = initialSignalValue;
         this.actuatorListeners = new ArrayList<>();
@@ -42,7 +42,7 @@ public class Actuator {
         logger.info("The provided ActuatorListener was removed from {}", instrumentId);
     }
 
-    void adjustSignal(final double newSignalValue) {
+    public void adjustSignal(final double newSignalValue) {
         logger.info("Adjusting signal of {}.\tNew signal value: {}", instrumentId, newSignalValue);
         signalValue = newSignalValue;
         final Signal newSignal = new Signal(
@@ -55,7 +55,7 @@ public class Actuator {
         }
     }
 
-    double getSignalValue() {
+    public double getSignalValue() {
         return signalValue;
     }
 }

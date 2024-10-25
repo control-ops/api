@@ -3,6 +3,7 @@ package com.control_ops.control_system.instrument.actuator;
 import com.control_ops.control_system.instrument.Signal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class OutputList implements ActuatorListener {
@@ -13,7 +14,7 @@ public class OutputList implements ActuatorListener {
         signals.add(signal);
     }
 
-    List<Signal> getSignals() {
-        return signals;
+    public List<Signal> getSignals() {
+        return Collections.unmodifiableList(signals);
     }
 }

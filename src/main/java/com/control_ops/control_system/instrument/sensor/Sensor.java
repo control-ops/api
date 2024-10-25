@@ -1,5 +1,6 @@
 package com.control_ops.control_system.instrument.sensor;
 
+import com.control_ops.control_system.PeriodicExecutor;
 import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
@@ -9,22 +10,18 @@ import org.slf4j.LoggerFactory;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Sensor {
-    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
-    private boolean isMeasuring = false;
+    private Signal currentSignal;
+
     private final MeasurementBehaviour measurementBehaviour;
-
     private final InstrumentId instrumentId;
-    private final long samplingPeriod;
-    private final TimeUnit samplingPeriodUnit;
     private final SignalUnit signalUnit;
-    private final ScheduledExecutorService scheduler;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
+    private final PeriodicExecutor periodicExecutor;
 
+    private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
     /**
      * Initializes a new sensor object.
      * @param instrumentId A unique string identifying the sensor
@@ -40,11 +37,10 @@ public class Sensor {
             final SignalUnit signalUnit,
             final MeasurementBehaviour measurementBehaviour) {
         this.instrumentId = new InstrumentId(instrumentId);
-        this.samplingPeriod = samplingPeriod;
-        this.samplingPeriodUnit = samplingPeriodUnit;
         this.signalUnit = signalUnit;
         this.measurementBehaviour = measurementBehaviour;
-        this.scheduler = Executors.newScheduledThreadPool(1);
+        this.periodicExecutor = new PeriodicExecutor(instrumentId, samplingPeriod, samplingPeriodUnit, this::takeMeasurement);
+
         logger.info(
                 "A new sensor was created.\tSensor ID: {}\tSampling period: {} {}\tSignal unit: {}",
                 instrumentId,
@@ -53,24 +49,20 @@ public class Sensor {
                 signalUnit);
     }
 
+    public Signal getCurrentSignal() {
+        return currentSignal;
+    }
+
+    public InstrumentId getInstrumentID() {
+        return instrumentId;
+    }
+
     public void startMeasuring() {
-        if (isMeasuring) {
-            logger.warn("Measurement is already enabled for {}", instrumentId);
-            return;
-        }
-        this.scheduler.scheduleAtFixedRate(this::takeMeasurement, 0L, this.samplingPeriod, this.samplingPeriodUnit);
-        this.isMeasuring = true;
-        logger.info("Measurement was enabled for {}.\tSampling period: {} {}", instrumentId, samplingPeriod, samplingPeriodUnit);
+        periodicExecutor.start();
     }
 
     public void stopMeasuring() {
-        if (!isMeasuring) {
-            logger.warn("Measurement is already disabled for {}", instrumentId);
-            return;
-        }
-        this.scheduler.shutdown();
-        this.isMeasuring = false;
-        logger.info("Measurement was disabled for {}", instrumentId);
+        periodicExecutor.stop();
     }
 
     public void addListener(final SensorListener sensorListener) {
@@ -99,6 +91,7 @@ public class Sensor {
                 instrumentId,
                 signalUnit,
                 ZoneId.of("UTC"));
+        currentSignal = newSignal;
         for (final SensorListener listener : this.sensorListeners) {
             listener.onMeasurement(newSignal);
         }

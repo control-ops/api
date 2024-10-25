@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 class InstrumentIdTest {
     @Test
     void testUniqueIds() {
-        final String duplicatedId = "duplicatedId";
+        final String duplicatedId = "InstrumentIdTest::duplicatedId";
         new InstrumentId(duplicatedId);
         assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(() ->
                 new InstrumentId(duplicatedId));
