@@ -14,14 +14,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Sensor {
     private Signal currentSignal;
-
     private final MeasurementBehaviour measurementBehaviour;
     private final InstrumentId instrumentId;
     private final SignalUnit signalUnit;
     private final List<SensorListener> sensorListeners = new ArrayList<>();
     private final PeriodicExecutor periodicExecutor;
-
     private static final Logger logger = LoggerFactory.getLogger(Sensor.class);
+
     /**
      * Initializes a new sensor object.
      * @param instrumentId A unique string identifying the sensor

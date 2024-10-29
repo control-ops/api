@@ -12,12 +12,10 @@ public class ControlLoop {
 
     private double setPoint;
     private ControlBehaviour controlBehaviour;
-
     private final Sensor controlledVariable;
     private final Actuator manipulatedVariable;
     private final PeriodicExecutor periodicExecutor;
     private static final ControlLoopRegistry controlLoopRegistry = new ControlLoopRegistry();
-
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
     public ControlLoop(

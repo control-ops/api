@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Actuator {
-    private static final Logger logger = LoggerFactory.getLogger(Actuator.class);
+    private double signalValue;
     private final InstrumentId instrumentId;
     private final List<ActuatorListener> actuatorListeners;
-    private double signalValue;
+    private static final Logger logger = LoggerFactory.getLogger(Actuator.class);
 
     public Actuator(final String instrumentId, final double initialSignalValue) {
         this.instrumentId = new InstrumentId(instrumentId);
