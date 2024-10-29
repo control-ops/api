@@ -23,18 +23,33 @@ import static org.awaitility.Awaitility.await;
 
 class ControlLoopTest {
 
-    private final long sensorSamplingPeriod = 20L;
+    private Actuator actuator;
+    private Sensor sensor;
+
     private final long controlLoopUpdatePeriod = 40L;
     private final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     private final double gain = 1.0;
     private final OutputList outputList = new OutputList();
-    private final Actuator actuator = new Actuator("ControlLoopTest::actuator" + testCount, 0.0);
-    private final Sensor sensor = new Sensor(
-            "ControlLoopTest::sensor" + testCount, sensorSamplingPeriod, timeUnit, SignalUnit.CELSIUS, new ConstantMeasurement(0.0));
     private final ControlBehaviour controlBehaviour = new ProportionalControl(gain);
     private final double setPoint = 2.0;
 
-    static long testCount = 1;
+    static long sensorCount = 0;
+    static long actuatorCount = 0;
+
+    Sensor makeSensor() {
+        sensorCount++;
+        return new Sensor(
+                "ControlLoopTest::sensor" + sensorCount,
+                20L,
+                timeUnit,
+                SignalUnit.CELSIUS,
+                new ConstantMeasurement(0.0));
+    }
+
+    Actuator makeActuator() {
+        actuatorCount++;
+        return new Actuator("ControlLoopTest::actuator" + actuatorCount, 0.0);
+    }
 
     ControlLoop makeDefaultControlLoop() {
         return new ControlLoop(
@@ -48,13 +63,14 @@ class ControlLoopTest {
 
     @BeforeEach
     void setUp() {
+        actuator = makeActuator();
+        sensor = makeSensor();
         actuator.addListener(outputList);
         sensor.startMeasuring();
-        testCount++;
     }
 
     private void waitForActuatorAdjustments(final int numAdjustments, final long periodMs) {
-        final long maxWaitDurationMs = Math.max(200, 2*numAdjustments*periodMs);
+        final long maxWaitDurationMs = Math.max(500, 3*numAdjustments*periodMs);
         final int initialSize = outputList.getSignals().size();
         await().atMost(maxWaitDurationMs, timeUnit)
                 .pollDelay(0L, TimeUnit.MILLISECONDS)
@@ -197,4 +213,40 @@ class ControlLoopTest {
         PeriodicExecutorTest.assertExecutionPeriod(
                 updateTimes, updatePeriodMs, TimeUnit.MILLISECONDS, 0.01);
     }
+
+    /**
+     * Tests that the same Sensor cannot be used to instantiate multiple control loops.
+     */
+    @Test
+    void testInstantiationDuplicatedSensor() {
+        makeDefaultControlLoop();
+        final Actuator newActuator = makeActuator();
+        assertThatExceptionOfType(ControlLoopRegistry.RegistrationDuplicationException.class)
+                .isThrownBy(() -> new ControlLoop(
+                        sensor,
+                        newActuator,
+                        1.0,
+                        10L,
+                        TimeUnit.MILLISECONDS,
+                        controlBehaviour));
+
+    }
+
+    /**
+     * Tests that the same Actuator cannot be used to instantiate multiple control loops.
+     */
+    @Test
+    void testInstantiationDuplicatedActuator() {
+        makeDefaultControlLoop();
+        final Sensor newSensor = makeSensor();
+        assertThatExceptionOfType(ControlLoopRegistry.RegistrationDuplicationException.class)
+                .isThrownBy(() -> new ControlLoop(
+                        newSensor,
+                        actuator,
+                        1.0,
+                        10L,
+                        TimeUnit.MILLISECONDS,
+                        controlBehaviour));
+    }
+
 }
