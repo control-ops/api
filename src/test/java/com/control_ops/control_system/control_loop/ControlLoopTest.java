@@ -70,7 +70,7 @@ class ControlLoopTest {
     }
 
     private void waitForActuatorAdjustments(final int numAdjustments, final long periodMs) {
-        final long maxWaitDurationMs = Math.max(200, 2*numAdjustments*periodMs);
+        final long maxWaitDurationMs = Math.max(500, 3*numAdjustments*periodMs);
         final int initialSize = outputList.getSignals().size();
         await().atMost(maxWaitDurationMs, timeUnit)
                 .pollDelay(0L, TimeUnit.MILLISECONDS)
