@@ -33,13 +33,14 @@ class ControlLoopTest {
     private final ControlBehaviour controlBehaviour = new ProportionalControl(gain);
     private final double setPoint = 2.0;
 
-    static long sensorCount = 0;
-    static long actuatorCount = 0;
+    static int sensorCount = 0;
+    static int actuatorCount = 0;
+    static int controlLoopCount = 0;
 
     Sensor makeSensor() {
         sensorCount++;
         return new Sensor(
-                "ControlLoopTest::sensor" + sensorCount,
+                sensorCount,
                 20L,
                 timeUnit,
                 SignalUnit.CELSIUS,
@@ -48,11 +49,13 @@ class ControlLoopTest {
 
     Actuator makeActuator() {
         actuatorCount++;
-        return new Actuator("ControlLoopTest::actuator" + actuatorCount, 0.0);
+        return new Actuator(actuatorCount, 0.0);
     }
 
     ControlLoop makeDefaultControlLoop() {
+        controlLoopCount++;
         return new ControlLoop(
+                controlLoopCount,
                 sensor,
                 actuator,
                 setPoint,
@@ -170,6 +173,7 @@ class ControlLoopTest {
     })
     void testUpdateSequence(final long updatePeriodMs, final int numUpdates) {
         final ControlLoop controlLoop = new ControlLoop(
+                ++controlLoopCount,
                 sensor,
                 actuator,
                 setPoint,
@@ -196,6 +200,7 @@ class ControlLoopTest {
     void testUpdatePeriod(final long updatePeriodMs, final int numUpdates) {
 
         final ControlLoop controlLoop = new ControlLoop(
+                ++controlLoopCount,
                 sensor,
                 actuator,
                 setPoint,
@@ -223,6 +228,7 @@ class ControlLoopTest {
         final Actuator newActuator = makeActuator();
         assertThatExceptionOfType(ControlLoopRegistry.RegistrationDuplicationException.class)
                 .isThrownBy(() -> new ControlLoop(
+                        ++controlLoopCount,
                         sensor,
                         newActuator,
                         1.0,
@@ -241,6 +247,7 @@ class ControlLoopTest {
         final Sensor newSensor = makeSensor();
         assertThatExceptionOfType(ControlLoopRegistry.RegistrationDuplicationException.class)
                 .isThrownBy(() -> new ControlLoop(
+                        ++controlLoopCount,
                         newSensor,
                         actuator,
                         1.0,

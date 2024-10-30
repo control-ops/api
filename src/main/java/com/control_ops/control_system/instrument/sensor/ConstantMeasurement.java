@@ -1,6 +1,5 @@
 package com.control_ops.control_system.instrument.sensor;
 
-import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
 
@@ -15,7 +14,7 @@ public class ConstantMeasurement implements MeasurementBehaviour {
     }
 
     @Override
-    public Signal takeMeasurement(final InstrumentId instrumentId, final SignalUnit signalUnit, final ZoneId timeZone) {
-        return new Signal(instrumentId, constant, signalUnit, ZonedDateTime.now(timeZone));
+    public Signal takeMeasurement(final SignalUnit signalUnit, final ZoneId timeZone) {
+        return new Signal(constant, signalUnit, ZonedDateTime.now(timeZone));
     }
 }

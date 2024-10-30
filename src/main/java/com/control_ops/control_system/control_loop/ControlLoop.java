@@ -12,6 +12,7 @@ public class ControlLoop {
 
     private double setPoint;
     private ControlBehaviour controlBehaviour;
+    private final int id;
     private final Sensor controlledVariable;
     private final Actuator manipulatedVariable;
     private final PeriodicExecutor periodicExecutor;
@@ -19,6 +20,7 @@ public class ControlLoop {
     private static final Logger logger = LoggerFactory.getLogger(ControlLoop.class);
 
     public ControlLoop(
+            final int id,
             final Sensor controlledVariable,
             final Actuator manipulatedVariable,
             final double setPoint,
@@ -26,7 +28,7 @@ public class ControlLoop {
             final TimeUnit updatePeriodUnit,
             final ControlBehaviour controlBehaviour) {
         controlLoopRegistry.registerControlLoop(this, controlledVariable, manipulatedVariable);
-
+        this.id = id;
         this.controlledVariable = controlledVariable;
         this.manipulatedVariable = manipulatedVariable;
         this.setPoint = setPoint;
@@ -48,7 +50,7 @@ public class ControlLoop {
         logger.info("Set point updated from {} to {} for {}",
                 oldSetPoint,
                 newSetPoint,
-                controlledVariable.getInstrumentID());
+                controlledVariable.getId());
     }
 
     public void switchControlBehaviour(final ControlBehaviour newControlBehaviour) {
@@ -57,7 +59,7 @@ public class ControlLoop {
         logger.info("Control behaviour switched from {} to {} on control loop {}",
                 oldControlBehaviour,
                 newControlBehaviour,
-                controlledVariable.getInstrumentID());
+                controlledVariable.getId());
     }
 
     public double getSetPoint() {
@@ -74,6 +76,6 @@ public class ControlLoop {
 
     @Override
     public String toString() {
-        return "control loop";
+        return "ControlLoop" + id;
     }
 }
