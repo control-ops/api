@@ -45,7 +45,7 @@ public class ControlLoop {
     public void updateSetPoint(final double newSetPoint) {
         final double oldSetPoint = setPoint;
         setPoint = newSetPoint;
-        logger.info("Set point updated from {} tp {} on control loop {}",
+        logger.info("Set point updated from {} to {} for {}",
                 oldSetPoint,
                 newSetPoint,
                 controlledVariable.getInstrumentID());
@@ -54,7 +54,7 @@ public class ControlLoop {
     public void switchControlBehaviour(final ControlBehaviour newControlBehaviour) {
         final ControlBehaviour oldControlBehaviour = this.controlBehaviour;
         this.controlBehaviour = newControlBehaviour;
-        logger.info("Control behaviour switched from {} tp {} on control loop {}",
+        logger.info("Control behaviour switched from {} to {} on control loop {}",
                 oldControlBehaviour,
                 newControlBehaviour,
                 controlledVariable.getInstrumentID());
@@ -65,7 +65,7 @@ public class ControlLoop {
     }
 
     private synchronized void updateManipulatedVariable() {
-        final double newActuatorOutput = controlBehaviour.calculateActuatorValue(
+        final double newActuatorOutput = controlBehaviour.calculateActuatorOutput(
                 setPoint,
                 controlledVariable.getCurrentSignal().quantity()
         );
