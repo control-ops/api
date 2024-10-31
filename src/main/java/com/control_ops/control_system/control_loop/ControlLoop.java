@@ -34,6 +34,7 @@ public class ControlLoop {
         this.setPoint = setPoint;
         this.periodicExecutor = new PeriodicExecutor("test", updatePeriod, updatePeriodUnit, this::updateManipulatedVariable);
         this.controlBehaviour = controlBehaviour;
+        logger.info("{} was successfully created", this);
     }
 
     public void startControlling() {
@@ -50,16 +51,16 @@ public class ControlLoop {
         logger.info("Set point updated from {} to {} for {}",
                 oldSetPoint,
                 newSetPoint,
-                controlledVariable.getId());
+                this);
     }
 
     public void switchControlBehaviour(final ControlBehaviour newControlBehaviour) {
         final ControlBehaviour oldControlBehaviour = this.controlBehaviour;
         this.controlBehaviour = newControlBehaviour;
-        logger.info("Control behaviour switched from {} to {} on control loop {}",
+        logger.info("Control behaviour switched from {} to {} on {}",
                 oldControlBehaviour,
                 newControlBehaviour,
-                controlledVariable.getId());
+                this);
     }
 
     public double getSetPoint() {

@@ -20,29 +20,29 @@ public class Actuator {
         this.id = id;
         this.signalValue = initialSignalValue;
         this.actuatorListeners = new ArrayList<>();
-        logger.info("A new Actuator was created.\tInstrument ID: {}\tInitial signal value: {}", id, initialSignalValue);
+        logger.info("A new Actuator was created.\tID: {}\tInitial signal value: {}", id, initialSignalValue);
     }
 
     public void addListener(final ActuatorListener actuatorListener) {
         if (this.actuatorListeners.contains(actuatorListener)) {
-            logger.warn("Cannot add the provided ActuatorListener; it is already subscribed to {}", id);
+            logger.warn("Cannot add the provided ActuatorListener; it is already subscribed to {}", this);
             return;
         }
         this.actuatorListeners.add(actuatorListener);
-        logger.info("The provided ActuatorListener was added to {}", id);
+        logger.info("The provided ActuatorListener was added to {}", this);
     }
 
     public void removeListener(final ActuatorListener actuatorListener) {
         if (!this.actuatorListeners.contains(actuatorListener)) {
-            logger.warn("Cannot remove the provided ActuatorListener; it is not subscribed to {}", id);
+            logger.warn("Cannot remove the provided ActuatorListener; it is not subscribed to {}", this);
             return;
         }
         this.actuatorListeners.remove(actuatorListener);
-        logger.info("The provided ActuatorListener was removed from {}", id);
+        logger.info("The provided ActuatorListener was removed from {}", this);
     }
 
     public void adjustSignal(final double newSignalValue) {
-        logger.info("Adjusting signal of {}.\tNew signal value: {}", id, newSignalValue);
+        logger.info("Adjusting signal of {}.\tNew signal value: {}", this, newSignalValue);
         signalValue = newSignalValue;
         final Signal newSignal = new Signal(
                 signalValue,

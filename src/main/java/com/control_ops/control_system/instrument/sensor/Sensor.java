@@ -40,7 +40,7 @@ public class Sensor {
         this.periodicExecutor = new PeriodicExecutor(this.toString(), samplingPeriod, samplingPeriodUnit, this::takeMeasurement);
 
         logger.info(
-                "A new sensor was created.\tSensor ID: {}\tSampling period: {} {}\tSignal unit: {}",
+                "A new sensor was created.\tID: {}\tSampling period: {} {}\tSignal unit: {}",
                 id,
                 samplingPeriod,
                 samplingPeriodUnit,
@@ -49,10 +49,6 @@ public class Sensor {
 
     public Signal getCurrentSignal() {
         return currentSignal;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public void startMeasuring() {
@@ -65,20 +61,20 @@ public class Sensor {
 
     public void addListener(final SensorListener sensorListener) {
         if (this.sensorListeners.contains(sensorListener)) {
-            logger.warn("Cannot add the provided SensorListener; it is already subscribed to {}", id);
+            logger.warn("Cannot add the provided SensorListener; it is already subscribed to {}", this);
             return;
         }
         this.sensorListeners.add(sensorListener);
-        logger.info("The provided SensorListener was added to {}", id);
+        logger.info("The provided SensorListener was added to {}", this);
     }
 
     public void removeListener(final SensorListener sensorListener) {
         if (!this.sensorListeners.contains(sensorListener)) {
-            logger.warn("Cannot remove the provided SensorListener; it is not subscribed to {}", id);
+            logger.warn("Cannot remove the provided SensorListener; it is not subscribed to {}", this);
             return;
         }
         this.sensorListeners.remove(sensorListener);
-        logger.info("The provided SensorListener was removed from {}", id);
+        logger.info("The provided SensorListener was removed from {}", this);
     }
 
     /**
