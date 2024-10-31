@@ -34,11 +34,12 @@ public class ControlLoopRegistry {
         registeredSensors.put(sensor, controlLoop);
         registeredActuators.put(actuator, controlLoop);
         registeredControlLoops.add(controlLoop);
+        logger.info("{} was successfully registered:\tSensor: {}\tActuator: {}", controlLoop, sensor, actuator);
     }
 
     static class RegistrationDuplicationException extends RuntimeException {
         private RegistrationDuplicationException(final Object object) {
-            super(object.toString() + " has already been registered");
+            super(object + " has already been registered");
         }
     }
 
