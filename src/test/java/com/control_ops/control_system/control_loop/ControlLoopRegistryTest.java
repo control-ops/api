@@ -12,8 +12,9 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class ControlLoopRegistryTest {
-    private static long sensorCount = 0;
-    private static long actuatorCount = 0;
+    private static int sensorCount = 0;
+    private static int actuatorCount = 0;
+    private static int controlLoopCount = 0;
 
     private Sensor sensor1;
     private Actuator actuator1;
@@ -24,7 +25,7 @@ class ControlLoopRegistryTest {
     private static Sensor makeSensor() {
         sensorCount++;
         return new Sensor(
-                "ControlLoopRegistryTest::sensor" + sensorCount,
+                sensorCount,
                 100L,
                 TimeUnit.MILLISECONDS,
                 SignalUnit.CELSIUS,
@@ -33,13 +34,12 @@ class ControlLoopRegistryTest {
 
     private static Actuator makeActuator() {
         actuatorCount++;
-        return new Actuator(
-                "ControlLoopRegistryTest::actuator" + actuatorCount,
-                0.0);
+        return new Actuator(actuatorCount, 0.0);
     }
 
     private static ControlLoop makeControlLoop(final Sensor sensor, final Actuator actuator) {
-        return new ControlLoop(sensor, actuator, 1.0, 200, TimeUnit.MILLISECONDS, new ProportionalControl(1.0));
+        controlLoopCount++;
+        return new ControlLoop(controlLoopCount, sensor, actuator, 1.0, 200, TimeUnit.MILLISECONDS, new ProportionalControl(1.0));
     }
 
     @BeforeEach

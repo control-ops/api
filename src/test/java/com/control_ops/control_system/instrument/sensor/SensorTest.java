@@ -1,7 +1,6 @@
 package com.control_ops.control_system.instrument.sensor;
 
 import com.control_ops.control_system.PeriodicExecutorTest;
-import com.control_ops.control_system.instrument.InstrumentId;
 import com.control_ops.control_system.instrument.Signal;
 import com.control_ops.control_system.instrument.SignalUnit;
 import org.awaitility.core.ConditionTimeoutException;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -32,12 +30,12 @@ class SensorTest {
     private static int numSensorsInstantiated = 0;
 
     private Sensor makeDefaultSensor() {
-        return new Sensor(generateInstrumentId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
+        return new Sensor(generateId(), samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
     }
 
-    private String generateInstrumentId() {
+    private int generateId() {
         numSensorsInstantiated++;
-        return "SensorTest::thermocouple" + numSensorsInstantiated;
+        return numSensorsInstantiated;
     }
 
     /**
@@ -46,23 +44,6 @@ class SensorTest {
     private void waitForMeasurements() {
         final int initialNumMeasurements = signals.size();
         await().atMost(10*samplingPeriod, samplingTimeUnit).until(() -> signals.size() > initialNumMeasurements);
-    }
-
-    /**
-     * Tests that multiple sensors with the same instrument ID cannot be instantiated.
-     */
-    @Test
-    void testSensorInstantiation() {
-        new Sensor("SensorTest::duplicatedId", samplingPeriod, samplingTimeUnit, SignalUnit.CELSIUS, new RandomMeasurement());
-        final MeasurementBehaviour measurementBehaviour = new RandomMeasurement();
-        assertThatExceptionOfType(InstrumentId.IdAlreadyExistsException.class).isThrownBy(
-                () -> new Sensor(
-                        "SensorTest::duplicatedId",
-                        samplingPeriod,
-                        samplingTimeUnit,
-                        SignalUnit.CELSIUS,
-                        measurementBehaviour)
-        );
     }
 
     /**
@@ -230,7 +211,7 @@ class SensorTest {
             final double maxFractionalError) {
         this.samplingPeriod = expectedSamplingPeriod;
         final Sensor sensor = new Sensor(
-                generateInstrumentId(),
+                generateId(),
                 samplingPeriod,
                 samplingTimeUnit,
                 SignalUnit.CELSIUS,
