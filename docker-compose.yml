@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: control-system-postgres
+    environment:
+      POSTGRES_USER: control
+      POSTGRES_PASSWORD: system
+      POSTGRES_DB: control-system
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data # Persist data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/1_schema.sql:ro
+      - ./db/data.sql:/docker-entrypoint-initdb.d/2_data.sql:ro
+
+volumes:
+  db_data:

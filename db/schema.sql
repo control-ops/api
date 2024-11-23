@@ -1,0 +1,4 @@
+CREATE TABLE sensors (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    sampling_period BIGINT
+);
