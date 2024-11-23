@@ -12,4 +12,4 @@ CREATE TABLE sensors (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     signal_unit signal_unit NOT NULL,
     sampling_period BIGINT NOT NULL,
-    sampling_period_time_unit time_unit NOT NULL);
+    sampling_period_unit time_unit NOT NULL);
