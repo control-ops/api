@@ -17,17 +17,27 @@ java {
 repositories {
 	mavenCentral()
 }
-
+val mockitoAgent = configurations.create("mockitoAgent")
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-amqp")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.amqp:spring-rabbit-test")
+	testImplementation(libs.mockito.core)
+
+	// Used to be the following, but changed due to an annoying IntelliJ warning: mockitoAgent(libs.mockito.core) { isTransitive = false }
+	mockitoAgent("org.mockito:mockito-core:${libs.versions.mockito.get()}") {
+		isTransitive = false
+	}
+
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testRuntimeOnly("com.h2database:h2") // A database is required by the applicationcontext for tests to pass; switch out later for PostgresSQL
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	jvmArgs(
+		"-Xshare:off", // Removes an annoying warning: https://github.com/mockito/mockito/issues/3111
+		"-javaagent:${mockitoAgent.asPath}") // Manually attaches agent since self-attaching is deprecated
 }

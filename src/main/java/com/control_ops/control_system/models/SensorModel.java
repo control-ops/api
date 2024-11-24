@@ -2,6 +2,7 @@ package com.control_ops.control_system.models;
 
 import com.control_ops.control_system.instrument.SignalUnit;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Setter
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "sensors")
 public class SensorModel {
     @Id
