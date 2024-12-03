@@ -29,7 +29,9 @@ val intTestImplementation: Configuration by configurations.getting {
 	extendsFrom(configurations.implementation.get())
 }
 
-configurations["intTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+val intTestRuntimeOnly: Configuration by configurations.getting {
+	extendsFrom(configurations.runtimeOnly.get())
+}
 
 val mockitoAgent = configurations.create("mockitoAgent")
 dependencies {
@@ -45,6 +47,9 @@ dependencies {
 
 	intTestImplementation("org.springframework.boot:spring-boot-starter-test")
 	intTestImplementation("org.springframework.boot:spring-boot-testcontainers")
+	intTestImplementation("org.testcontainers:postgresql")
+	intTestImplementation("org.testcontainers:junit-jupiter")
+	intTestRuntimeOnly("com.h2database:h2") // A database is required by the applicationcontext for tests to pass; switch out later for PostgresSQL
 
 	// Used to be the following, but changed due to an annoying IntelliJ warning: mockitoAgent(libs.mockito.core) { isTransitive = false }
 	mockitoAgent("org.mockito:mockito-core:${libs.versions.mockito.get()}") {
@@ -52,7 +57,7 @@ dependencies {
 	}
 }
 
-// Add an integration test task
+// Add an integration test task https://stackoverflow.com/questions/68947203/how-can-i-have-distinct-folders-for-unit-integration-and-end-to-end-tests-in-a
 val integrationTest = task<Test>("integrationTest") {
 	description = "Runs integration tests."
 	group = "verification"
